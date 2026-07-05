@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --font-pixel: 'Press Start 2P', monospace;
+}
+
+:root {
+  --theme-bg: #ffffff;
+  --theme-text: #1a1a1a;
+  --theme-primary: #6366f1;
+  --theme-accent: #f59e0b;
+}
+
+.theme-pixel {
+  --theme-bg: #1a1a2e;
+  --theme-text: #e0e0e0;
+  --theme-primary: #ff6b6b;
+  --theme-accent: #ffd93d;
+}
+
+body {
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  transition: background-color 0.3s, color 0.3s;
+}
