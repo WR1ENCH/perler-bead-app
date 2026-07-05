@@ -45,37 +45,45 @@ onMounted(async () => {
 
 async function processImage(src: string) {
   processing.value = true
-  const p = projectStore.current!
-  const img = new Image()
-  img.src = src
-  await new Promise(resolve => { img.onload = resolve })
+  try {
+    const p = projectStore.current!
+    const img = new Image()
+    img.src = src
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error('图片加载失败'))
+    })
 
-  const canvas = document.createElement('canvas')
-  canvas.width = img.width
-  canvas.height = img.height
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(img, 0, 0)
+    const canvas = document.createElement('canvas')
+    canvas.width = img.width
+    canvas.height = img.height
+    const ctx = canvas.getContext('2d')!
+    ctx.drawImage(img, 0, 0)
 
-  const allHexValues = getAllHexValues()
-  const palette: PaletteColor[] = allHexValues.map(hex => {
-    const rgb = hexToRgb(hex)
-    return rgb ? { key: hex, hex, rgb } : null
-  }).filter(Boolean) as PaletteColor[]
-  const fallback: PaletteColor = { key: 'T1', hex: '#FFFFFF', rgb: { r: 255, g: 255, b: 255 } }
+    const allHexValues = getAllHexValues()
+    const palette: PaletteColor[] = allHexValues.map(hex => {
+      const rgb = hexToRgb(hex)
+      return rgb ? { key: hex, hex, rgb } : null
+    }).filter(Boolean) as PaletteColor[]
+    const fallback: PaletteColor = { key: 'T1', hex: '#FFFFFF', rgb: { r: 255, g: 255, b: 255 } }
 
-  const grid = calculatePixelGrid(
-    ctx, img.width, img.height,
-    p.settings.gridWidth, p.settings.gridHeight,
-    palette, p.settings.pixelationMode, fallback
-  )
+    const grid = calculatePixelGrid(
+      ctx, img.width, img.height,
+      p.settings.gridWidth, p.settings.gridHeight,
+      palette, p.settings.pixelationMode, fallback
+    )
 
-  const merged = mergeSimilarColors(grid, palette, p.settings.similarityThreshold)
-  editorStore.setCells(merged)
-  editorStore.setPalette(palette)
-  p.cells = merged
-  p.palette = palette
-  await projectStore.save(p)
-  processing.value = false
+    const merged = mergeSimilarColors(grid, palette, p.settings.similarityThreshold)
+    editorStore.setCells(merged)
+    editorStore.setPalette(palette)
+    p.cells = merged
+    p.palette = palette
+    await projectStore.save(p)
+  } catch (e) {
+    console.error('处理图片失败:', e)
+  } finally {
+    processing.value = false
+  }
 }
 </script>
 
